@@ -10,7 +10,10 @@ Original file is located at
 import pandas as pd
 from datetime import datetime
 
-df = pd.read_csv("data.csv", encoding='ISO-8859-1')
+import zipfile
+
+with zipfile.ZipFile("data.zip", 'r') as zip_ref:
+    zip_ref.extractall()
 df.dropna(subset=['CustomerID'], inplace=True)
 df['TotalPrice'] = df['Quantity'] * df['UnitPrice']
 
