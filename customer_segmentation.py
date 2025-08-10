@@ -40,8 +40,8 @@ if uploaded_file and not use_sample:
     df = load_data(uploaded_file)
 else:
     with zipfile.ZipFile("data.zip", "r") as z:
-    with z.open("data.csv") as f:
-        df = pd.read_csv(f, encoding='ISO-8859-1')
+        with z.open("data.csv") as f:
+            df = pd.read_csv(f, encoding='ISO-8859-1')
 
 # RFM
 snapshot_date = df['InvoiceDate'].max() + pd.Timedelta(days=1)
