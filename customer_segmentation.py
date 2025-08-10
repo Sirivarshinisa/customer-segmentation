@@ -5,6 +5,9 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
+import zipfile
+
+
 
 st.set_page_config(page_title="Customer Segmentation", layout="wide")
 
@@ -36,7 +39,9 @@ def load_data(file):
 if uploaded_file and not use_sample:
     df = load_data(uploaded_file)
 else:
-    df = load_data("data.csv")
+    with zipfile.ZipFile("data.zip", "r") as z:
+    with z.open("data.csv") as f:
+        df = pd.read_csv(f, encoding='ISO-8859-1')
 
 # RFM
 snapshot_date = df['InvoiceDate'].max() + pd.Timedelta(days=1)
