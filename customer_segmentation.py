@@ -4,10 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
 import zipfile
-
-
 
 st.set_page_config(page_title="Customer Segmentation", layout="wide")
 
@@ -19,7 +16,7 @@ This app segments customers based on:
 - **Frequency** (Number of purchases)  
 - **Monetary** (Total spent)
 
-Upload your data or use sample below.  
+Upload your data or use the sample dataset.  
 Built using K-Means Clustering.
 """)
 
@@ -31,9 +28,6 @@ use_sample = st.sidebar.checkbox("Use sample data instead", value=True)
 @st.cache_data
 def load_data(file):
     df = pd.read_csv(file, encoding='ISO-8859-1')
-    df.dropna(subset=['CustomerID'], inplace=True)
-    df['TotalPrice'] = df['Quantity'] * df['UnitPrice']
-    df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
     return df
 
 if uploaded_file and not use_sample:
@@ -43,10 +37,18 @@ else:
         with z.open("data.csv") as f:
             df = pd.read_csv(f, encoding='ISO-8859-1')
 
-# ✅ Ensure datetime parsing in both cases
-df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'], errors='coerce')
+# ✅ Common preprocessing for both cases
+required_cols = ['CustomerID', 'InvoiceDate', 'InvoiceNo', 'Quantity', 'UnitPrice']
+missing_cols = [col for col in required_cols if col not in df.columns]
+if missing_cols:
+    st.error(f"Missing columns in dataset: {missing_cols}")
+    st.stop()
 
-# RFM
+df.dropna(subset=['CustomerID'], inplace=True)
+df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'], errors='coerce')
+df['TotalPrice'] = df['Quantity'] * df['UnitPrice']
+
+# RFM calculation
 snapshot_date = df['InvoiceDate'].max() + pd.Timedelta(days=1)
 rfm = df.groupby('CustomerID').agg({
     'InvoiceDate': lambda x: (snapshot_date - x.max()).days,
@@ -60,7 +62,7 @@ scaler = StandardScaler()
 rfm_scaled = scaler.fit_transform(rfm[['Recency', 'Frequency', 'Monetary']])
 
 # Clustering
-kmeans = KMeans(n_clusters=4, random_state=42)
+kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
 rfm['Cluster'] = kmeans.fit_predict(rfm_scaled)
 
 # Optional: Label clusters
