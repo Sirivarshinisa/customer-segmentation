@@ -43,6 +43,9 @@ else:
         with z.open("data.csv") as f:
             df = pd.read_csv(f, encoding='ISO-8859-1')
 
+# ✅ Ensure datetime parsing in both cases
+df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'], errors='coerce')
+
 # RFM
 snapshot_date = df['InvoiceDate'].max() + pd.Timedelta(days=1)
 rfm = df.groupby('CustomerID').agg({
